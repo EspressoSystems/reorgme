@@ -65,6 +65,7 @@ export type ReorgmeOptions = {
   id?: number
   dockerOptions?: DockerOptions
   allocations?: Record<string, { balance: ethers.BigNumberish }>
+  rpcPorts?: number[]
 }
 
 export const ReorgmeDefaults = {
@@ -72,7 +73,8 @@ export const ReorgmeDefaults = {
   allocations: {
     "7df9a875a174b3bc565e6424a0050ebc1b2d1d82": { balance: "1000000000000000000" },
     "f41c74c9ae680c1aa78f42e5647a62f353b7bdde": { balance: "1000000000000000000" }
-  }
+  },
+  rpcPorts: [18545, 28545, 38545]
 }
 
 export class Reorgme {
@@ -80,6 +82,7 @@ export class Reorgme {
 
   public docker: Dockerode
   public image = "ethereum/client-go:v1.11.0"
+  public rpcPorts: number[]
 
   public genesis: Genesis
 
@@ -99,6 +102,7 @@ export class Reorgme {
 
     this.id = opts.id
     this.docker = new Dockerode(opts.dockerOptions)
+    this.rpcPorts = opts.rpcPorts
 
     // Generate genesis
     this.genesis = { ...SAMPLE_GENESIS }
@@ -192,8 +196,7 @@ export class Reorgme {
   }
 
   public async rpcUrl(index: number) {
-    const container = this.docker.getContainer(this.containerName(index))
-    return `http://${await this.ipOf(index)}:8545/`
+    return `http://localhost:${this.rpcPorts[index]}/`
   }
 
   public async rpcProvider(index: number) {
@@ -267,7 +270,7 @@ export class Reorgme {
         output('Removing old network')
         await this.clearNetwork(name)
         output('Creating new network')
-        const net = await this.docker.createNetwork({ Internal: true, Name: name, Driver: "bridge" })
+        const net = await this.docker.createNetwork({ Internal: false, Name: name, Driver: "bridge" })
         title(`Created network ${name} ${net.id.slice(0, 5)}`)
       }  
     })
@@ -634,7 +637,10 @@ export class Reorgme {
             NetworkMode: `${this.networkName()}`,
             Binds: [
               `${volume}:/data`
-            ]
+            ],
+            PortBindings: {
+              "8545/tcp": [{ HostPort: this.rpcPorts[i].toString() }]
+            }
           }
         })
 
