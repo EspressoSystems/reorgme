@@ -11,7 +11,8 @@ export const command = yargs(hideBin(process.argv))
   .command("start", "creates and starts a new testnet blockchain", (yargs) => {
     yargs.options({
       detach: { type: 'boolean', default: true },
-      allocation: { type: 'array', help: "balance allocation on genesis, e.g. 0xf41c74c9ae680c1aa78f42e5647a62f353b7bdde=1000000000000000000", default: [] }
+      allocation: { type: 'array', help: "balance allocation on genesis, e.g. 0xf41c74c9ae680c1aa78f42e5647a62f353b7bdde=1000000000000000000", default: [] },
+      rpcPort: { type: 'array', help: "RPC ports for the 3 geth nodes", default: [18545, 28545, 38545] }
     })
   }, async (args) => {
     const allocations = (args.allocation as string[]).map((s) => {
@@ -22,7 +23,12 @@ export const command = yargs(hideBin(process.argv))
       return { addr: parts[0], balance: parts[1] }
     }).reduce((p, v) => ({ ...p, [v.addr]: { balance: v.balance }}), {})
 
-    const reorgme = new Reorgme({ id: args.id, allocations: allocations })
+    const rpcPorts = args.rpcPort as number[]
+    if (rpcPorts.length != 3) {
+      throw new Error(`must specify exactly 3 RPC ports`)
+    }
+
+    const reorgme = new Reorgme({ id: args.id, allocations: allocations, rpcPorts: rpcPorts })
 
     let canceled = false
 
