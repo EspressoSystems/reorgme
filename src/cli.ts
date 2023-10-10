@@ -7,10 +7,11 @@ import { Reorgme, ReorgmeDefaults } from './reorgme'
 export const command = yargs(hideBin(process.argv))
   .options({
     id: { type: 'number', default: ReorgmeDefaults.id },
-    rpcPort: { type: 'array', help: "RPC ports for the 3 geth nodes", default: [18545, 28545, 38545] }
+    rpcPort: { type: 'array', help: "RPC ports for the 3 geth nodes", default: ReorgmeDefaults.rpcPorts }
   })
   .command("start", "creates and starts a new testnet blockchain", (yargs) => {
     yargs.options({
+      chainId: { type: 'number', default: ReorgmeDefaults.chainId },
       detach: { type: 'boolean', default: true },
       allocation: { type: 'array', help: "balance allocation on genesis, e.g. 0xf41c74c9ae680c1aa78f42e5647a62f353b7bdde=1000000000000000000", default: [] },
     })
@@ -23,7 +24,7 @@ export const command = yargs(hideBin(process.argv))
       return { addr: parts[0], balance: parts[1] }
     }).reduce((p, v) => ({ ...p, [v.addr]: { balance: v.balance }}), {})
 
-    const reorgme = new Reorgme({ id: args.id, allocations: allocations, rpcPorts: parseRpcPorts(args) })
+    const reorgme = new Reorgme({ id: args.id, chainId: args.chainId as number, allocations: allocations, rpcPorts: parseRpcPorts(args) })
 
     let canceled = false
 

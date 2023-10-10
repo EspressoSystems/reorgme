@@ -75,6 +75,7 @@ export type NodeKeys = {
 
 export type ReorgmeOptions = {
   id?: number
+  chainId?: number
   dockerOptions?: DockerOptions
   allocations?: Record<string, { balance: ethers.BigNumberish }>
   rpcPorts?: number[]
@@ -82,6 +83,7 @@ export type ReorgmeOptions = {
 
 export const ReorgmeDefaults = {
   id: 0,
+  chainId: 9999,
   allocations: {
     "7df9a875a174b3bc565e6424a0050ebc1b2d1d82": { balance: "1000000000000000000" },
     "f41c74c9ae680c1aa78f42e5647a62f353b7bdde": { balance: "1000000000000000000" }
@@ -118,6 +120,7 @@ export class Reorgme {
 
     // Generate genesis
     this.genesis = { ...SAMPLE_GENESIS }
+    this.genesis.config.chainId = opts.chainId
 
     Object.keys(opts.allocations).forEach((k, i) => {
       this.genesis.alloc[k.replace("0x", "")] = {
