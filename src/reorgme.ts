@@ -31,6 +31,12 @@ export interface Config {
   byzantiumBlock: number;
   constantinopleBlock: number;
   petersburgBlock: number;
+  istanbulBlock: number;
+  muirGlacierBlock: number;
+  berlinBlock: number;
+  londonBlock: number;
+  arrowGlacierBlock: number;
+  grayGlacierBlock: number;
 }
 export interface Allocation {
   balance: string;
@@ -46,7 +52,13 @@ export const SAMPLE_GENESIS: Genesis = {
     "eip158Block": 0,
     "byzantiumBlock": 0,
     "constantinopleBlock": 0,
-    "petersburgBlock": 0
+    "petersburgBlock": 0,
+    "istanbulBlock": 0,
+    "muirGlacierBlock": 0,
+    "berlinBlock": 0,
+    "londonBlock": 0,
+    "arrowGlacierBlock": 0,
+    "grayGlacierBlock": 0
   },
   "difficulty": "1",
   "gasLimit": "8000000",
@@ -668,7 +680,9 @@ export class Reorgme {
           try {
             const res = await provider.getBlock(0)
             return res !== null
-          } catch {}
+          } catch (e) {
+            output(`Error: ${e}`)
+          }
         })
 
         output('Registering other peers')
