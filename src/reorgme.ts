@@ -675,18 +675,27 @@ export class Reorgme {
         output('Connecting to internal network')
         await this.docker.getNetwork(this.internalNetworkName()).connect({ Container: container.id })
 
-        output('Retrieving provider')
-        const provider = await this.rpcProvider(i)
-
         output('Waiting for RPC')
         await waitCondition(async () => {
           try {
+            // Sometimes, when the container is first starting up, it can briefly report a chain ID
+            // of 1 before switching to the requested chain ID. If the chain ID changes like this,
+            // the connected provider is no longer usable. Thus, we connect a fresh provider each
+            // time we retry, until we get the proper chain.
+            const provider = await this.rpcProvider(i)
+            const network = await provider.getNetwork()
+            if (network.chainId != this.genesis.config.chainId) {
+              return false
+            }
             const res = await provider.getBlock(0)
             return res !== null
           } catch (e) {
             output(`Error: ${e}`)
           }
         })
+
+        output('Retrieving provider')
+        const provider = await this.rpcProvider(i)
 
         output('Registering other peers')
         await Promise.all(this.peerIds(i).map(async (pi) => {
